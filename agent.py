@@ -2,8 +2,9 @@ from dm import dmap
 import cv2
 
 def main():
-    dm = dmap.DMap(device = 1, flip = False)
-    # "/home/vlad/video.avi")
+    dm = dmap.DMap(device = "/home/vlad/video.avi",
+                   flip = True,
+                   calibrationData = "/home/vlad/calibration.npz")
 
     while(True):
         depth_map = dm.captureDepthMap()

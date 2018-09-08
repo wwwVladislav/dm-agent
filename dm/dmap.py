@@ -7,12 +7,24 @@ FRAME_HEIGHT = 480
 
 class DMap:
     def __init__(self,
+                calibrationData = "/home/vlad/calibration.npz",
                 frameWidth = FRAME_WIDTH,
                 frameHeight = FRAME_HEIGHT,
                 device = 0,
                 out = None,
+                outL = None,
                 flip = True,
                 numDisparities = 64):
+
+        calibration = np.load(calibrationData, allow_pickle=False)
+        self.imageSize = tuple(calibration["imageSize"])
+        self.leftMapX = calibration["leftMapX"]
+        self.leftMapY = calibration["leftMapY"]
+        self.leftROI = tuple(calibration["leftROI"])
+        self.rightMapX = calibration["rightMapX"]
+        self.rightMapY = calibration["rightMapY"]
+        self.rightROI = tuple(calibration["rightROI"])
+
         self.frameWidth = frameWidth
         self.frameHeight = frameHeight
         self.flip = flip
@@ -42,13 +54,20 @@ class DMap:
         self.wls_filter.setSigmaColor(1.2)
 
         if out != None:
-            self.videoWriter = cv2.VideoWriter("/home/vlad/video.avi", cv2.VideoWriter_fourcc(*'XVID'), 25, (frameWidth * 2, frameHeight), True)
+            self.videoWriter = cv2.VideoWriter(out, cv2.VideoWriter_fourcc(*'XVID'), 25, (frameWidth * 2, frameHeight), True)
         else:
              self.videoWriter = None
+
+        if outL != None:
+            self.videoWriterL = cv2.VideoWriter(outL, cv2.VideoWriter_fourcc(*'XVID'), 25, (frameWidth, frameHeight), True)
+        else:
+            self.videoWriterL = None
 
     def __del__(self):
         if self.videoWriter != None:
             self.videoWriter.release()
+        if self.videoWriterL != None:
+            self.videoWriterL.release()
         cv2.destroyAllWindows()
 
     def captureDepthMap(self):
@@ -61,13 +80,15 @@ class DMap:
         if self.flip:
             frame = cv2.flip(frame, flipCode = -1)
 
-        # Out frame
-        if self.videoWriter != None:
-            self.videoWriter.write(frame)
-
         # Split left and right frames
         leftFrame = frame[0:self.frameHeight, 0:self.frameWidth]
         rightFrame = frame[0:self.frameHeight, self.frameWidth:(self.frameWidth * 2)]
+
+        # Out frame
+        if self.videoWriter != None:
+            self.videoWriter.write(frame)
+        if self.videoWriterL != None:
+            self.videoWriterL.write(leftFrame)
 
         # Calculate disparity map
         disparity_left  = self.left_matcher.compute(leftFrame, rightFrame)
