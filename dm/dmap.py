@@ -84,6 +84,8 @@ class DMap:
         leftFrame = frame[0:self.frameHeight, 0:self.frameWidth]
         rightFrame = frame[0:self.frameHeight, self.frameWidth:(self.frameWidth * 2)]
 
+        return leftFrame, leftFrame
+        
         # Out frame
         if self.videoWriter != None:
             self.videoWriter.write(frame)
@@ -106,4 +108,4 @@ class DMap:
         # cv2.imshow('right', rightFrame)
         # cv2.imshow('depth_map', depth_map)
 
-        return depth_map
+        return leftFrame, depth_map
